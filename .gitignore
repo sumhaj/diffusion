@@ -1,0 +1,20 @@
+virtual_env/*
+
+# Ignore images
+
+*.jpg
+*.png
+*.jpeg
+
+__pycache__
+*.zip
+
+# Ignore dataset files
+*.csv
+*.json
+
+# Ignore checkpoints
+*.pth
+
+# Ignore pickle files
+*.pkl

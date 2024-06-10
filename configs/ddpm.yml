@@ -1,0 +1,39 @@
+dataset:
+  mnist:
+    train: 'data/train/mnist'
+    test: 'data/test/mnist'
+
+diffusion:
+  type: 'ddpm'
+  noise_schedule: 'sigmoid'
+  num_timesteps: 1000
+  beta_start: 1.e-4
+  beta_end: 0.02
+
+model:
+  time_emb_dim: 128
+  image_size: 28
+  image_channels: 1
+  down_channels: [32, 64, 128, 256]
+  down_sample: [True, True, False]
+  mid_channels: [256, 256, 128]
+  num_down_layers: 2
+  num_mid_layers: 2
+  num_up_layers: 2
+  num_heads: 4
+
+train:
+  epoch: 100
+  batch_size: 64
+  num_samples: 100
+  num_grid_rows: 10
+  saved_ddpm_model_dir: 'ddpm_saved_model/'
+  optimizer:
+    type: adam
+    weight_decay: 0.
+    lr: 1.e-3
+    beta1: 0.95
+    beta2: 0.999
+
+
+
