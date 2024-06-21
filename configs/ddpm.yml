@@ -25,7 +25,7 @@ model:
 train:
   epoch: 100
   batch_size: 64
-  num_samples: 100
+  num_samples: 32
   num_grid_rows: 10
   saved_ddpm_model_dir: 'ddpm_saved_model/'
   optimizer:

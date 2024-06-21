@@ -57,8 +57,8 @@ class NoiseScheduler:
         return batch_sqrt_one_minus_alphas_cum_prod * original + batch_sqrt_alphas_cum_prod * noise
     
     def sample_prev_timestep(self, xt, noise_pred, t):
-        x0 = ((xt - (self.sqrt_one_minus_alpha_cum_prod.to(xt.device)[t] * noise_pred)) / 
-              torch.sqrt(self.alpha_cum_prod.to(xt.device)[t]))
+        x0 = ((xt - (self.sqrt_one_minus_alphas_cum_prod.to(xt.device)[t] * noise_pred)) / 
+              torch.sqrt(self.alphas_cum_prod.to(xt.device)[t]))
         x0 = torch.clamp(x0, -1., 1.)
 
         mean = (xt - self.betas[t] / self.sqrt_one_minus_alphas_cum_prod[t] * noise_pred) / self.alphas[t].sqrt()

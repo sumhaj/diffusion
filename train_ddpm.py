@@ -55,8 +55,8 @@ def train(args):
         epoch_loss = torch.mean(torch.tensor(losses))
         print("Epoch : {} | Loss : {}".format(epoch_idx, epoch_loss.item()))
         if best_loss > epoch_loss:
-            torch.save(model.save_dict(), os.path.join(config.train.saved_ddpm_model_dir, 'min_loss.pth'))
-        torch.save(model.save_dict(), os.path.join(config.train.saved_ddpm_model_dir, 'epoch_{}.pth'.format(epoch_idx)))
+            torch.save(model.state_dict(), os.path.join(config.train.saved_ddpm_model_dir, 'saved_ddpm_min_loss.pth'))
+        torch.save(model.state_dict(), os.path.join(config.train.saved_ddpm_model_dir, 'saved_ddpm_epoch_{}.pth'.format(epoch_idx)))
         
     
 if __name__ == '__main__':
