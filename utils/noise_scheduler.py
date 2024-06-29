@@ -47,8 +47,8 @@ class NoiseScheduler:
 
 
     def apply_noise(self, original, noise, t):
-        batch_sqrt_one_minus_alphas_cum_prod = self.sqrt_one_minus_alphas_cum_prod[t]
-        batch_sqrt_alphas_cum_prod = self.sqrt_alphas_cum_prod[t]
+        batch_sqrt_one_minus_alphas_cum_prod = self.sqrt_one_minus_alphas_cum_prod.to(original.device)[t]
+        batch_sqrt_alphas_cum_prod = self.sqrt_alphas_cum_prod.to(original.device)[t]
         
         for _ in range(len(original.shape)-1):
             batch_sqrt_one_minus_alphas_cum_prod = batch_sqrt_one_minus_alphas_cum_prod.unsqueeze(-1)
@@ -61,14 +61,14 @@ class NoiseScheduler:
               torch.sqrt(self.alphas_cum_prod.to(xt.device)[t]))
         x0 = torch.clamp(x0, -1., 1.)
 
-        mean = (xt - self.betas[t] / self.sqrt_one_minus_alphas_cum_prod[t] * noise_pred) / self.alphas[t].sqrt()
+        mean = (xt - self.betas.to(xt.device)[t] / self.sqrt_one_minus_alphas_cum_prod.to(xt.device)[t] * noise_pred) / self.alphas.to(xt.device)[t].sqrt()
 
         if(t == 0):
             return mean, x0
         
-        variance = (1 - self.alphas_cum_prod[t-1]) / (1 - self.alphas_cum_prod[t]) * self.betas[t]
+        variance = (1 - self.alphas_cum_prod.to(xt.device)[t-1]) / (1 - self.alphas_cum_prod.to(xt.device)[t]) * self.betas.to(xt.device)[t]
         sigma = variance ** 0.5
         
-        z = torch.randn(size=xt.shape)
+        z = torch.randn(size=xt.shape).to(xt.device)
 
         return mean + sigma * z, x0

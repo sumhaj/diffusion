@@ -14,6 +14,7 @@ from utils.utils import get_optimizer
 import torch
 from torch.utils.data import DataLoader
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def train(args):
     with open(args.config_path, 'r') as file:
@@ -30,7 +31,7 @@ def train(args):
     noise_scheduler = NoiseScheduler(num_timesteps=config.diffusion.num_timesteps)
     noise_scheduler.linear_noise_scheduler(beta_start=config.diffusion.beta_start, beta_end=config.diffusion.beta_end)
 
-    model = Unet(config.model)
+    model = Unet(config.model).to(device)
     model.train()
 
     optimizer = get_optimizer(config.train.optimizer, model)
@@ -41,21 +42,22 @@ def train(args):
         batch = 1
         for image, _ in mnist_loader:
             optimizer.zero_grad()
-            t = torch.randint(0, config.diffusion.num_timesteps, (image.shape[0], ))
-            noise = torch.randn_like(image)
-            noisy_image = noise_scheduler.apply_noise(image, noise, t)
+            t = torch.randint(0, config.diffusion.num_timesteps, (image.shape[0], )).to(device)
+            noise = torch.randn_like(image).to(device)
+            noisy_image = noise_scheduler.apply_noise(image.to(device), noise, t)
             noise_pred = model(noisy_image, t)
             loss = torch.nn.SmoothL1Loss()(noise, noise_pred)
-            print("Epoch : {} | Batch : {} | Loss : {}".format(epoch_idx, batch, loss.item()))
+            print("Epoch : {} | Batch : {} | Loss : {}".format(epoch_idx+1, batch, loss.item()))
             batch += 1
             losses.append(loss.item())
             loss.backward()
             optimizer.step()
 
         epoch_loss = torch.mean(torch.tensor(losses))
-        print("Epoch : {} | Loss : {}".format(epoch_idx, epoch_loss.item()))
+        print("Epoch : {} | Loss : {}".format(epoch_idx+1, epoch_loss.item()))
         if best_loss > epoch_loss:
-            torch.save(model.state_dict(), os.path.join(config.train.saved_ddpm_model_dir, 'saved_ddpm_min_loss.pth'))
+            torch.save(model.state_dict(), os.path.join(config.train.saved_ddpm_model_dir, 'saved_ddpm_min_loss_epoch_{}.pth'.format(epoch_idx)))
+            best_loss = epoch_loss
         torch.save(model.state_dict(), os.path.join(config.train.saved_ddpm_model_dir, 'saved_ddpm_epoch_{}.pth'.format(epoch_idx)))
         
     

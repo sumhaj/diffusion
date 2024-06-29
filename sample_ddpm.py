@@ -12,6 +12,8 @@ from torchvision.utils import make_grid
 from utils.noise_scheduler import NoiseScheduler
 from models.unet import Unet
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 def sample(args):
     with open(args.config_path, 'r') as file:
         try:
@@ -29,21 +31,19 @@ def sample(args):
     model.load_state_dict(torch.load(os.path.join(config.train.saved_ddpm_model_dir, 'saved_ddpm_min_loss.pth')))
     model.eval()
 
-    xt = torch.randn(size=(num_samples, config.model.image_channels, config.model.image_size, config.model.image_size))
+    xt = torch.randn(size=(num_samples, config.model.image_channels, config.model.image_size, config.model.image_size)).to(device)
     for i in reversed(range(config.diffusion.num_timesteps)):
-        # print('Time step : {}'.format(i))
-        noise_pred = model(xt, torch.full((num_samples, ), i))
-        xt, x0_pred = noise_scheduler.sample_prev_timestep(xt, noise_pred, torch.tensor(i))
-    images = torch.clamp(xt, -1., 1.).detach().cpu()
-    images = (images * 127.5) + 127.5
-    grid = make_grid(images, nrow=config.train.num_grid_rows)
-    img = torchvision.transforms.ToPILImage()(grid)
-    if not os.path.exists(os.path.join(config.diffusion.type, 'samples')):
-            os.mkdir(config.diffusion.type)
-            os.mkdir(os.path.join(config.diffusion.type, 'samples'))
-    # img.save(os.path.join(config.diffusion.type, 'samples', 'x0_{}.png'.format(i)))
-    img.save(os.path.join(config.diffusion.type, 'samples', 'x0.png'))
-    img.close()
+        noise_pred = model(xt, torch.full((num_samples, ), i).to(device))
+        xt, x0_pred = noise_scheduler.sample_prev_timestep(xt, noise_pred, torch.tensor(i).to(device))
+        images = torch.clamp(xt, -1., 1.).detach().cpu()
+        images = (images * 127.5) + 127.5
+        grid = make_grid(images, nrow=config.train.num_grid_rows)
+        img = torchvision.transforms.ToPILImage()(grid)
+        if not os.path.exists(os.path.join(config.diffusion.type, 'samples')):
+                os.mkdir(config.diffusion.type)
+                os.mkdir(os.path.join(config.diffusion.type, 'samples'))
+        img.save(os.path.join(config.diffusion.type, 'samples', 'x0_{}.png'.format(i)))
+        img.close()
 
 
 if __name__ == '__main__':
